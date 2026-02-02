@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedPlotter - Methylphenidate Stack Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MedPlotter</h1>
+            <p class="subtitle">Methylphenidate Daily Stack Visualizer</p>
+        </header>
+
+        <main>
+            <section class="stacks-section">
+                <div class="section-header">
+                    <h2>Daily Stacks</h2>
+                    <button id="add-stack-btn" class="btn btn-primary">+ Add Stack</button>
+                </div>
+                <div id="stacks-container"></div>
+            </section>
+
+            <div class="action-bar">
+                <button id="plot-btn" class="btn btn-large btn-success" disabled>Plot Stacks</button>
+            </div>
+
+            <section id="results-section" class="results-section hidden">
+                <h2>Results</h2>
+
+                <div class="chart-container">
+                    <canvas id="medication-chart"></canvas>
+                </div>
+
+                <div class="table-container">
+                    <h3>Hour-by-Hour Breakdown (mg in system)</h3>
+                    <div id="results-table-wrapper">
+                        <table id="results-table">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p class="disclaimer">
+                <strong>Disclaimer:</strong> This tool is for educational and informational purposes only.
+                Pharmacokinetic data is based on published research and may vary between individuals.
+                Always consult a healthcare professional for medical advice.
+            </p>
+        </footer>
+    </div>
+
+    <!-- Stack Template -->
+    <template id="stack-template">
+        <div class="stack-card" data-stack-id="">
+            <div class="stack-header">
+                <input type="text" class="stack-name-input" placeholder="Stack Name" value="">
+                <button class="btn btn-danger btn-small remove-stack-btn">Remove Stack</button>
+            </div>
+            <div class="medications-container"></div>
+            <button class="btn btn-secondary add-medication-btn">+ Add Medication</button>
+        </div>
+    </template>
+
+    <!-- Medication Template -->
+    <template id="medication-template">
+        <div class="medication-row" data-medication-id="">
+            <div class="medication-inputs">
+                <div class="input-group">
+                    <label>Formulation</label>
+                    <select class="formulation-select">
+                        <optgroup label="Immediate Release (IR)">
+                            <option value="ir-5">Immediate Release - 5mg</option>
+                            <option value="ir-10">Immediate Release - 10mg</option>
+                            <option value="ir-15">Immediate Release - 15mg</option>
+                            <option value="ir-20">Immediate Release - 20mg</option>
+                        </optgroup>
+                        <optgroup label="Ritalin LA (50% IR / 50% ER)">
+                            <option value="ritalin-la-10">Ritalin LA - 10mg</option>
+                            <option value="ritalin-la-20">Ritalin LA - 20mg</option>
+                            <option value="ritalin-la-30">Ritalin LA - 30mg</option>
+                            <option value="ritalin-la-40">Ritalin LA - 40mg</option>
+                        </optgroup>
+                        <optgroup label="Concerta (OROS - 22% IR / 78% ER)">
+                            <option value="concerta-18">Concerta - 18mg</option>
+                            <option value="concerta-27">Concerta - 27mg</option>
+                            <option value="concerta-36">Concerta - 36mg</option>
+                            <option value="concerta-54">Concerta - 54mg</option>
+                        </optgroup>
+                        <optgroup label="Metadate CD (30% IR / 70% ER)">
+                            <option value="metadate-cd-10">Metadate CD - 10mg</option>
+                            <option value="metadate-cd-20">Metadate CD - 20mg</option>
+                            <option value="metadate-cd-30">Metadate CD - 30mg</option>
+                            <option value="metadate-cd-40">Metadate CD - 40mg</option>
+                            <option value="metadate-cd-50">Metadate CD - 50mg</option>
+                            <option value="metadate-cd-60">Metadate CD - 60mg</option>
+                        </optgroup>
+                        <optgroup label="Aptensio XR (40% IR / 60% ER)">
+                            <option value="aptensio-xr-10">Aptensio XR - 10mg</option>
+                            <option value="aptensio-xr-15">Aptensio XR - 15mg</option>
+                            <option value="aptensio-xr-20">Aptensio XR - 20mg</option>
+                            <option value="aptensio-xr-30">Aptensio XR - 30mg</option>
+                            <option value="aptensio-xr-40">Aptensio XR - 40mg</option>
+                        </optgroup>
+                        <optgroup label="Focalin XR (Dexmethylphenidate - 50% IR / 50% ER)">
+                            <option value="focalin-xr-5">Focalin XR - 5mg</option>
+                            <option value="focalin-xr-10">Focalin XR - 10mg</option>
+                            <option value="focalin-xr-15">Focalin XR - 15mg</option>
+                            <option value="focalin-xr-20">Focalin XR - 20mg</option>
+                            <option value="focalin-xr-25">Focalin XR - 25mg</option>
+                            <option value="focalin-xr-30">Focalin XR - 30mg</option>
+                            <option value="focalin-xr-35">Focalin XR - 35mg</option>
+                            <option value="focalin-xr-40">Focalin XR - 40mg</option>
+                        </optgroup>
+                        <optgroup label="Quillivant XR (Liquid - 20% IR / 80% ER)">
+                            <option value="quillivant-xr-20">Quillivant XR - 20mg</option>
+                            <option value="quillivant-xr-30">Quillivant XR - 30mg</option>
+                            <option value="quillivant-xr-40">Quillivant XR - 40mg</option>
+                        </optgroup>
+                        <optgroup label="Jornay PM (Delayed-Release for Evening Dosing)">
+                            <option value="jornay-pm-20">Jornay PM - 20mg</option>
+                            <option value="jornay-pm-40">Jornay PM - 40mg</option>
+                            <option value="jornay-pm-60">Jornay PM - 60mg</option>
+                            <option value="jornay-pm-80">Jornay PM - 80mg</option>
+                            <option value="jornay-pm-100">Jornay PM - 100mg</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="input-group time-input-group">
+                    <label>Time of Dose</label>
+                    <div class="time-picker">
+                        <select class="hour-select">
+                            <option value="12">12</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7" selected>7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                        </select>
+                        <span>:</span>
+                        <select class="minute-select">
+                            <option value="00" selected>00</option>
+                            <option value="15">15</option>
+                            <option value="30">30</option>
+                            <option value="45">45</option>
+                        </select>
+                        <select class="ampm-select">
+                            <option value="AM" selected>AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-danger btn-icon remove-medication-btn" title="Remove medication">×</button>
+        </div>
+    </template>
+
+    <script src="pharmacokinetics.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
